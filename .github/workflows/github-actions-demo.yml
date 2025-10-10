@@ -24,7 +24,7 @@ jobs:
       - name: Generate Artifact
         run: cd backend/build && zip -r artifact.zip ./ -X '*.git*'
       - name: Store Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: backend-artifact
           path: backend/build/artifact.zip
