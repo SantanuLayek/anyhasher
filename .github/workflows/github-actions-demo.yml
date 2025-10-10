@@ -129,7 +129,7 @@ jobs:
           uses: actions/checkout@v1
         - name: Run Smoke Test
           run: |
-            export BACKEND_URL=http://anyhasher-env.eba-ahbkb527.ap-south-1.elasticbeanstalk.com/
+            export BACKEND_URL=http://anyhasher-env.eba-ahbkb527.ap-south-1.elasticbeanstalk.com
             cd backend/e2e
             chmod +x backend-smoke.sh
             ./backend-smoke.sh
