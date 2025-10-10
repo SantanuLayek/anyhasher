@@ -7,7 +7,7 @@ jobs:
     steps:
       - name: Cache Node Modules
         id: cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
             path: node_modules
             key: node_modules-cache
