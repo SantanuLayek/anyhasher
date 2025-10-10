@@ -8,14 +8,14 @@ terraform {
   required_version = ">= 1.2.0"
   
   backend "s3" {
-    bucket = "anyhasher.terraform.states"
+    bucket = "anyhasher-terraform"
     key    = "anyhasher-be.tfstate"
-    region = "us-east-1"
+    region = "ap-south-1"
   }
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = "ap-south-1"
 }
 
 module "ec2" {
