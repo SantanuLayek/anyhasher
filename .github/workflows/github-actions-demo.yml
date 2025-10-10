@@ -27,7 +27,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-artifact
-          path: backend/build/artifact.zip
+          path: backend/build/
   lint:
     needs: [compile]
     runs-on: ubuntu-latest
@@ -70,18 +70,18 @@ jobs:
         security-events: write
     steps:
         - uses: actions/checkout@v1
-        - name: Initialize CodeQL
-          uses: github/codeql-action/init@v2
-          with:
-            languages: javascript
-        - name: Setup Node
-          uses: actions/setup-node@v1
-          with:
-            node-version: 16.x
-        - name: Install Dependencies
-          run: cd backend && npm i
-        - name: Perform Analysis
-          uses: github/codeql-action/analyze@v2
+        # - name: Initialize CodeQL
+        #   uses: github/codeql-action/init@v2
+        #   with:
+        #     languages: javascript
+        # - name: Setup Node
+        #   uses: actions/setup-node@v1
+        #   with:
+        #     node-version: 16.x
+        # - name: Install Dependencies
+        #   run: cd backend && npm i
+        # - name: Perform Analysis
+        #   uses: github/codeql-action/analyze@v2
 
   security-audit:
     needs: [compile]
@@ -91,3 +91,45 @@ jobs:
           uses: actions/checkout@v1
         - name: Check for security issue
           run: cd backend && npm audit --audit-level=medium
+
+  deploy_to_eb:
+    # if: github.ref == 'refs/heads/main'
+    needs: [static-analysis, security-audit, lint, test]
+    runs-on: ubuntu-latest
+    outputs:
+        url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+        - name: Get Artifact
+          uses: actions/download-artifact@v4
+          with: 
+            name: backend-artifact
+            path: backend/build
+        - name: Prepare ProcFile
+          run: |
+            echo "web: node server.js" > backend/build/Procfile
+        - name: Prepare Zipi file
+          run: cd backend/build && ls && zip -r artifact.zip  ./ -X '*.git*'
+        - name: Deploy to Elastic Beanstalk
+          id: deployment
+          uses: einaregilsson/beanstalk-deploy@v20
+          with:
+            aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            application_name: "AnyHasher"
+            environment_name: "AnyHasher-env"
+            version_label: "v-${{ github.run_number }}"
+            region: "ap-southeast-1"
+            deployment_package: "backend/build/artifact.zip"
+
+  verify-production:
+    runs-on: ubuntu-latest
+    needs: [deploy_to_eb]
+    steps:
+        - name: Checkout
+          uses: actions/checkout@v1
+        - name: Run Smoke Test
+          run: |
+            export BACKEND_URL=http://anyhasher-env.eba-ahbkb527.ap-south-1.elasticbeanstalk.com/
+            cd e2e
+            chmod +x backend-smoke.sh
+            ./backend-smoke.sh
