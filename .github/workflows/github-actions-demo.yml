@@ -118,7 +118,7 @@ jobs:
             application_name: "AnyHasher"
             environment_name: "AnyHasher-env"
             version_label: "v-${{ github.run_number }}"
-            region: "ap-southeast-1"
+            region: "ap-south-1"
             deployment_package: "backend/build/artifact.zip"
 
   verify-production:
